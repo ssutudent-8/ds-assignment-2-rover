@@ -9,24 +9,18 @@
 <style>
 *{box-sizing:border-box}
 body{
-  margin:0;
-  background:#090909;
-  color:#e6d36a;
+  margin:0;background:#090909;color:#e6d36a;
   font-family:'Oxanium','Nanum Gothic Coding',monospace;
-  font-weight:300;
-  font-size:15px;
-  transition:background 0.8s;
+  font-weight:300;font-size:15px;transition:background 0.8s;
 }
 body.day-bg{background:#1a2340}
-
 .container{max-width:1400px;margin:auto;padding:16px 48px}
 
 /* ── 탭 ── */
 .tabs{margin-bottom:12px;display:flex;gap:6px}
 .tabs button{
-  background:#111;color:#e6d36a;
-  border:2px solid #8a7420;padding:8px 22px;
-  cursor:pointer;font-family:inherit;font-size:15px;font-weight:300;
+  background:#111;color:#e6d36a;border:2px solid #8a7420;
+  padding:8px 22px;cursor:pointer;font-family:inherit;font-size:15px;font-weight:300;
   transition:background 0.15s;
 }
 .tabs button:hover,.tabs button.active-tab{background:#2a2000;border-color:#e6d36a}
@@ -39,19 +33,23 @@ body.day-bg{background:#1a2340}
   transition:box-shadow 0.3s,border-color 0.3s;
 }
 .panel.flash-win{animation:panelFlash 0.8s ease-out}
+.panel.flash-turn{animation:panelFlashTurn 0.7s ease-out}
 @keyframes panelFlash{
   0%{box-shadow:0 0 10px #6d5b18}
   30%{box-shadow:0 0 40px #ffe066,0 0 80px #ffe066;border-color:#ffe066}
   100%{box-shadow:0 0 10px #6d5b18;border-color:#8a7420}
 }
+@keyframes panelFlashTurn{
+  0%{box-shadow:0 0 10px #6d5b18}
+  35%{box-shadow:0 0 5px #ffe066,0 0 10px #ffe066;border-color:#9a7e28}
+  100%{box-shadow:0 0 10px #6d5b18;border-color:#8a7420}
+}
 
 /* ── 버튼 공통 ── */
 .btn{
-  background:#111;color:#e6d36a;
-  border:2px solid #8a7420;padding:7px 12px;
+  background:#111;color:#e6d36a;border:2px solid #8a7420;padding:7px 12px;
   cursor:pointer;font-family:inherit;font-size:14px;font-weight:300;
-  transition:background 0.15s;
-  display:inline-flex;align-items:center;justify-content:center;
+  transition:background 0.15s;display:inline-flex;align-items:center;justify-content:center;
 }
 .btn:hover{background:#222}
 .btn:disabled{opacity:0.35;cursor:not-allowed}
@@ -61,17 +59,40 @@ body.day-bg{background:#1a2340}
 .btn-highlight{border-color:#ffe066;color:#ffe066;animation:pulseBtn 1s infinite alternate}
 @keyframes pulseBtn{from{box-shadow:0 0 4px #ffe066}to{box-shadow:0 0 18px #ffe066}}
 
-/* ── 인벤토리 ── */
+/* ── 플레이어 비활성화 ── */
+.player-disabled{opacity:0.35;filter:grayscale(1);pointer-events:none}
+
+/* ── Turn 텍스트 flash ── */
+@keyframes turnFlash{
+  0%{color:#e6d36a;text-shadow:none}
+  40%{color:#fff;text-shadow:0 0 12px #ffe066,0 0 24px #ffe066}
+  100%{color:#e6d36a;text-shadow:none}
+}
+.turn-flash{animation:turnFlash 0.7s ease-out}
+
+/* ── UML 체크 고정 버튼 활성화 ── */
+.btn-lock-on{
+  background:#e6d36a;color:#000;border-color:#e6d36a;
+}
+.btn-lock-on:hover{background:#c8b84a}
+
+/* ── 인벤토리: 3열, 최소 카드 너비 확보 ── */
 .inventory{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:8px;max-height:620px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(120px,1fr));
+  gap:10px;
+  max-height:620px;
   overflow-y:auto;overflow-x:hidden;
 }
+/* 로봇 카드: 정사각형, 최소 크기 */
 .robot-card{
-  border:2px solid #444;padding:10px;
-  aspect-ratio:1;position:relative;
+  border:2px solid #444;
+  aspect-ratio:1;
+  position:relative;
   display:flex;flex-direction:column;justify-content:space-between;
   transition:box-shadow 0.3s;overflow:hidden;
+  min-width:90px;min-height:90px;
+  padding:clamp(4px,5%,10px);
 }
 .robot-card.active-robot{box-shadow:0 0 20px currentColor;background:#1a1a1a}
 .robot-card.waiting-robot{opacity:0.6}
@@ -82,14 +103,49 @@ body.day-bg{background:#1a2340}
   100%{box-shadow:0 0 0 transparent}
 }
 
+/* ── 카드 상단 액션 버튼: 카드 크기 따라감 ── */
+.card-actions{
+  position:absolute;top:4px;right:4px;
+  display:flex;gap:3px;align-items:center;
+}
+.card-btn{
+  width:clamp(18px,18%,26px);height:clamp(18px,18%,26px);
+  border:1px solid #555;background:rgba(0,0,0,0.6);
+  cursor:pointer;font-size:clamp(8px,10%,13px);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:3px;transition:background 0.15s;
+  color:#ccc;padding:0;
+}
+.card-btn:hover{background:rgba(60,60,60,0.9)}
+.card-btn-del{border-color:#722;color:#ff8888}
+.card-btn-del:hover{background:rgba(80,0,0,0.8)}
+
+/* ── 색상 변경 버튼: 카드 하단 중앙, 크게 ── */
+.card-color-btn{
+  position:absolute;
+  bottom:4px;left:50%;transform:translateX(-50%);
+  width:clamp(40px,55%,70px);height:clamp(22px,12%,30px);
+  border:1px solid #777;background:rgba(0,0,0,0.7);
+  cursor:pointer;font-size:clamp(12px,12%,16px);
+  display:flex;align-items:center;justify-content:center;
+  border-radius:3px;color:#ddd;padding:0;
+  transition:background 0.15s;white-space:nowrap;
+}
+.card-color-btn:hover{background:rgba(60,60,60,0.9)}
+
 /* ── 배터리 바 ── */
-.battery-bar{height:7px;background:#333;border-radius:2px;margin:4px 0}
+.battery-bar{height:6px;background:#333;border-radius:2px;margin:3px 0}
 .battery-fill{height:100%;border-radius:2px;transition:width 0.3s}
 
 /* ── 뱃지 ── */
-.badge{font-size:11px;padding:2px 6px;border-radius:3px;display:inline-block;margin:1px 1px 1px 0}
+.badge{font-size:clamp(10px,10%,13px);padding:1px 4px;border-radius:3px;display:inline-block;margin:1px 1px 1px 0}
 .badge-wait{background:#ff4444;color:#fff}
 .badge-dead{background:#444;color:#ccc}
+
+/* ── 카드 텍스트 크기: clamp로 반응형 ── */
+.card-name{font-size:clamp(12px,14%,18px);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:clamp(36px,40%,54px)}
+.card-type{font-size:clamp(10px,10%,14px);color:#888}
+.card-info{font-size:clamp(10px,10%,14px);color:#aaa}
 
 /* ── 진행 보드 ── */
 .progress-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:2px}
@@ -98,24 +154,14 @@ body.day-bg{background:#1a2340}
 /* ── 로그 ── */
 .log-section{margin-top:6px}
 #log{
-  height:190px;overflow-y:auto;
-  background:#050505;padding:8px;
-  font-size:13px;line-height:1.6;
-  border:1px solid #222;
+  height:190px;overflow-y:auto;background:#050505;
+  padding:8px;font-size:13px;line-height:1.6;border:1px solid #222;
 }
 
 /* ── 로그 오버레이 ── */
-#logOverlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,0.93);z-index:100;
-  flex-direction:column;padding:32px;
-}
+#logOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:100;flex-direction:column;padding:32px}
 #logOverlay.open{display:flex}
-#logOverlay .log-inner{
-  flex:1;overflow-y:auto;background:#050505;
-  border:1px solid #8a7420;
-  padding:20px;font-size:16px;line-height:1.9;
-}
+#logOverlay .log-inner{flex:1;overflow-y:auto;background:#050505;border:1px solid #8a7420;padding:20px;font-size:16px;line-height:1.9}
 #logOverlay .close-bar{display:flex;justify-content:flex-end;margin-bottom:10px}
 
 /* ── player 바 ── */
@@ -123,10 +169,9 @@ body.day-bg{background:#1a2340}
 
 /* ── weatherCycle 편집 ── */
 .cycle-display{
-  background:#111;border:1px solid #8a7420;
-  color:#e6d36a;font-size:14px;font-weight:400;
-  width:32px;text-align:center;padding:4px 2px;
-  cursor:pointer;display:inline-block;font-family:inherit;
+  background:#111;border:1px solid #8a7420;color:#e6d36a;
+  font-size:14px;font-weight:400;width:32px;text-align:center;
+  padding:4px 2px;cursor:pointer;display:inline-block;font-family:inherit;
 }
 .cycle-input{
   width:40px;text-align:center;font-size:14px;font-weight:400;
@@ -136,10 +181,8 @@ body.day-bg{background:#1a2340}
 
 /* ── 로봇 추가 오버레이 ── */
 #addOverlay{
-  display:none;position:fixed;
-  background:#0d0d0d;border:2px solid #8a7420;
-  z-index:50;padding:20px;flex-direction:column;gap:12px;
-  font-family:inherit;
+  display:none;position:fixed;background:#0d0d0d;border:2px solid #8a7420;
+  z-index:50;padding:20px;flex-direction:column;gap:12px;font-family:inherit;
 }
 #addOverlay.open{display:flex}
 .add-field{display:flex;flex-direction:column;gap:4px}
@@ -152,83 +195,60 @@ body.day-bg{background:#1a2340}
 
 /* ── 삭제 확인 오버레이 ── */
 #delOverlay{
-  display:none;position:fixed;
-  background:#0d0d0d;border:2px solid #a33;
-  z-index:60;padding:16px;flex-direction:column;gap:12px;
-  font-family:inherit;min-width:200px;
+  display:none;position:fixed;background:#0d0d0d;border:2px solid #a33;
+  z-index:60;padding:16px;flex-direction:column;gap:12px;font-family:inherit;min-width:200px;
 }
 #delOverlay.open{display:flex}
 
 /* ── UML ── */
 .uml-wrap{overflow-x:auto}
-.uml-class-box{
-  border:1px solid #888;background:#0d0d0d;
-  font-family:inherit;font-size:13px;
-}
-.uml-title{
-  border-bottom:1px solid #888;padding:5px 10px;
-  font-weight:600;text-align:center;font-size:14px;
-}
-.uml-fields{
-  border-bottom:1px solid #444;padding:5px 10px;
-  color:#ccc;line-height:1.8;font-size:13px;
-}
-.uml-behaviors{padding:5px 10px}
-.uml-row{
-  display:flex;align-items:center;gap:6px;
-  padding:2px 0;font-size:13px;
-}
+.uml-class-box{border:1px solid #888;background:#0d0d0d;font-family:inherit;font-size:13px}
+.uml-title{border-bottom:1px solid #888;padding:5px 10px;font-weight:600;text-align:center;font-size:14px}
+.uml-fields{border-bottom:1px solid #444;padding:5px 10px;color:#ccc;font-size:13px}
+.uml-field-item{line-height:2}
+.uml-behaviors{padding:4px 10px}
+.uml-row{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:13px}
 .uml-row-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* ── UML 화살표: 선이 위, 세모가 아래 ── */
+.uml-arrow-single{
+  display:flex;flex-direction:column;align-items:center;
+  padding:2px 0;
+}
+.uml-arrow-double{display:flex;justify-content:space-around;padding:2px 0}
+.arrow-col{display:flex;flex-direction:column;align-items:center}
+.arrow-line{width:1px;height:20px;background:#666}
+.arrow-head{font-size:14px;line-height:1;color:#aaa;margin-top:-2px}
+
 /* ── UML 체크박스 ── */
-.uml-cb{
-  width:16px;height:16px;cursor:pointer;
-  accent-color:#e6d36a;flex-shrink:0;
-  transition:outline 0.2s;
-}
-.uml-cb.unchecked-flash{
-  outline:2px solid #ff3333;
-  animation:cbFlash 2s ease-out forwards;
-}
-@keyframes cbFlash{
-  0%{outline-color:#ff3333}
-  80%{outline-color:#ff3333}
-  100%{outline-color:transparent}
-}
+.uml-cb{width:16px;height:16px;cursor:pointer;accent-color:#e6d36a;flex-shrink:0}
+.uml-cb.unchecked-flash{outline:2px solid #ff3333;animation:cbFlash 2s ease-out forwards}
+@keyframes cbFlash{0%{outline-color:#ff3333}80%{outline-color:#ff3333}100%{outline-color:transparent}}
 .uml-row.dimmed{opacity:0.35}
 
 /* ── 설명 팝업 ── */
-#descModal{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,0.85);z-index:200;
-  align-items:center;justify-content:center;
-}
+#descModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:center;justify-content:center}
 #descModal.open{display:flex}
-.desc-box{
-  background:#0f0f0f;border:2px solid #8a7420;
-  padding:26px;max-width:540px;width:92%;
-  font-family:inherit;position:relative;
-}
-.desc-close{
-  position:absolute;top:12px;right:12px;
-  background:none;border:none;color:#aaa;font-size:20px;
-  cursor:pointer;font-family:inherit;
-}
+.desc-box{background:#0f0f0f;border:2px solid #8a7420;padding:26px;max-width:540px;width:92%;font-family:inherit;position:relative}
+.desc-close{position:absolute;top:12px;right:12px;background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;font-family:inherit}
 .desc-entry{margin:12px 0}
 .desc-entry b{color:#e6d36a;font-size:15px}
 .desc-entry p{color:#bbb;margin:3px 0;font-size:13px;line-height:1.6}
+
+/* ── 설명 버튼: 2배 크기, 우하단 배치 ── */
 .desc-trigger{
   display:inline-flex;align-items:center;justify-content:center;
-  width:38px;height:38px;border-radius:8px;
+  width:72px;height:72px;border-radius:12px;
   border:2px solid #8a7420;background:#111;
-  cursor:pointer;color:#e6d36a;font-size:17px;
-  font-family:inherit;
+  cursor:pointer;color:#e6d36a;font-size:26px;font-family:inherit;
 }
 .desc-trigger:hover{background:#222}
 
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:#111}
 ::-webkit-scrollbar-thumb{background:#555}
+/* 로그 타임스탬프 */
+.log-ts{color:#555;font-size:11px;margin-right:4px}
 </style>
 </head>
 <body>
@@ -238,7 +258,7 @@ body.day-bg{background:#1a2340}
     <button id="tab-uml"  onclick="show('uml')">UML</button>
   </div>
   <div class="main">
-    <div id="leftPanel" class="panel" style="position:relative;min-height:600px">
+    <div id="leftPanel" class="panel" style="position:relative;min-height:700px">
       <div id="left"></div>
     </div>
     <div id="rightPanel" class="panel" style="position:relative">
@@ -259,7 +279,11 @@ body.day-bg{background:#1a2340}
 
 <!-- 로그 오버레이 -->
 <div id="logOverlay">
-  <div class="close-bar">
+  <div class="close-bar" style="display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:14px;color:#888" id="logOverlayTitle">LOG</span>
+      <button class="btn btn-danger" style="font-size:12px;padding:3px 10px" onclick="clearCurrentLog()">🗑 초기화</button>
+    </div>
     <button class="btn" onclick="closeLogOverlay()">✕ 닫기</button>
   </div>
   <div class="log-inner" id="logOverlayContent"></div>
@@ -270,26 +294,15 @@ body.day-bg{background:#1a2340}
   <div class="desc-box">
     <button class="desc-close" onclick="closeDesc()">✕</button>
     <h3 style="margin:0 0 14px;color:#e6d36a;font-size:16px">■ 클래스 설명</h3>
-    <div class="desc-entry">
-      <b>RobotADT</b>
-      <p>탐사 / 충전 / 상태조회의 추상 인터페이스. 모든 로봇의 공통 계약을 정의합니다.</p>
-    </div>
-    <div class="desc-entry">
-      <b>BaseRobot</b>
-      <p>배터리, 효율, 누적 탐사량, 대기턴을 관리하는 구체 베이스 클래스. _set_battery로 범위를 보정합니다.</p>
-    </div>
+    <div class="desc-entry"><b>RobotADT</b><p>탐사 / 충전 / 상태조회의 추상 인터페이스. 모든 로봇의 공통 계약을 정의합니다.</p></div>
+    <div class="desc-entry"><b>BaseRobot</b><p>배터리, 효율, 누적 탐사량, 대기턴을 관리하는 구체 베이스 클래스. _set_battery로 범위를 보정합니다.</p></div>
     <div class="desc-entry" style="border-left:3px solid #43ff7d;padding-left:10px">
-      <b style="color:#43ff7d">QuadrupedRobot</b>
-      <p>Night 충전 불가. Day에 recharge(weather) 호출 시 즉시 완전충전. 대기 없음.</p>
+      <b style="color:#43ff7d">QuadrupedRobot</b><p>Night 충전 불가. Day에 recharge(weather) 호출 시 즉시 완전충전. 대기 없음.</p>
     </div>
     <div class="desc-entry" style="border-left:3px solid #4aa3ff;padding-left:10px">
-      <b style="color:#4aa3ff">WheeledRobot</b>
-      <p>즉시 완전충전. 충전 후 2턴 대기(탐사 불가). 날씨 무관하게 충전 가능.</p>
+      <b style="color:#4aa3ff">WheeledRobot</b><p>즉시 완전충전. 충전 후 2턴 대기(탐사 불가). 날씨 무관하게 충전 가능.</p>
     </div>
-    <div class="desc-entry">
-      <b>World</b>
-      <p>날씨(낮/밤), 총 실행 횟수, 턴을 관리. 설정된 주기마다 낮↔밤 자동 전환.</p>
-    </div>
+    <div class="desc-entry"><b>World</b><p>날씨(낮/밤), 총 실행 횟수, 턴을 관리. 설정된 주기마다 낮↔밤 자동 전환.</p></div>
   </div>
 </div>
 
@@ -309,9 +322,9 @@ body.day-bg{background:#1a2340}
   </div>
   <div class="add-field"><label>최대 배터리</label><input id="addBat" type="number" value="5" min="1" max="99"></div>
   <div class="add-field"><label>효율</label><input id="addEff" type="number" value="3" min="1" max="20"></div>
-  <div style="display:flex;gap:10px;margin-top:4px">
-    <button class="btn" style="flex:1;font-size:14px" onclick="confirmAdd()">추가</button>
-    <button class="btn btn-danger" style="flex:1;font-size:14px" onclick="closeAdd()">취소</button>
+  <!-- 취소 버튼 제거, + 버튼 정사각형 중앙 -->
+  <div style="display:flex;justify-content:center;margin-top:4px">
+    <button class="btn btn-sq" style="width:48px;height:48px;font-size:22px" onclick="confirmAdd()">+</button>
   </div>
 </div>
 
@@ -328,78 +341,60 @@ body.day-bg{background:#1a2340}
 /* ═══════════════════════════════════════════
    클래스 (원본 py 그대로)
 ═══════════════════════════════════════════ */
-class RobotADT {
-  get name()       { throw new Error("abstract"); }
-  get battery()    { throw new Error("abstract"); }
-  get efficiency() { throw new Error("abstract"); }
-  get robotType()  { throw new Error("abstract"); }
-  recharge()       { throw new Error("abstract"); }
-  showStatus()     { throw new Error("abstract"); }
-  explore()        { throw new Error("abstract"); }
+class RobotADT{
+  get name(){throw new Error("abstract")} get battery(){throw new Error("abstract")}
+  get efficiency(){throw new Error("abstract")} get robotType(){throw new Error("abstract")}
+  recharge(){throw new Error("abstract")} showStatus(){throw new Error("abstract")} explore(){throw new Error("abstract")}
 }
-class BaseRobot extends RobotADT {
-  constructor(name, maxBattery, eff, rType, color) {
+class BaseRobot extends RobotADT{
+  constructor(name,maxBattery,eff,rType,color){
     super();
-    this._name=name; this._maxBattery=maxBattery;
-    this._battery=maxBattery; this._efficiency=eff;
-    this._robotType=rType; this._totalExp=0;
-    this._waitTurn=0; this.color=color;
+    this._name=name;this._maxBattery=maxBattery;this._battery=maxBattery;
+    this._efficiency=eff;this._robotType=rType;this._totalExp=0;this._waitTurn=0;this.color=color;
   }
-  get name()       { return this._name; }
-  get battery()    { return this._battery; }
-  get maxBattery() { return this._maxBattery; }
-  get efficiency() { return this._efficiency; }
-  get robotType()  { return this._robotType; }
-  get totalExp()   { return this._totalExp; }
-  get waitTurn()   { return this._waitTurn; }
-  _setBattery(v)   { this._battery=Math.max(0,Math.min(this._maxBattery,v)); }
+  get name(){return this._name} get battery(){return this._battery} get maxBattery(){return this._maxBattery}
+  get efficiency(){return this._efficiency} get robotType(){return this._robotType}
+  get totalExp(){return this._totalExp} get waitTurn(){return this._waitTurn}
+  _setBattery(v){this._battery=Math.max(0,Math.min(this._maxBattery,v))}
 }
-class WheeledRobot extends BaseRobot {
-  constructor(name,maxBattery,eff,color){ super(name,maxBattery,eff,"사륜구동",color); }
-  recharge(){
-    this._waitTurn=2; this._setBattery(this._maxBattery);
-    addLog(`[RECHARGE] ${this.name}: 완전충전, 2턴 대기 시작`);
-  }
+class WheeledRobot extends BaseRobot{
+  constructor(name,maxBattery,eff,color){super(name,maxBattery,eff,"사륜구동",color)}
+  recharge(){this._waitTurn=2;this._setBattery(this._maxBattery);addLog(`[RECHARGE] ${this.name}: 완전충전, 2턴 대기 시작`)}
   explore(world,turn){
-    world.updateWeather(turn);
-    if(this._waitTurn>0){ addLog(`[WAIT] ${this.name}: 대기(${this._waitTurn}턴 남음)`); this._waitTurn--; return 0; }
+    if(this._waitTurn>0){addLog(`[WAIT] ${this.name}: 대기(${this._waitTurn}턴 남음)`);this._waitTurn--;return 0}
     if(this._battery<=0) return 0;
-    this._setBattery(this._battery-1); this._totalExp+=this._efficiency;
-    return this._efficiency;
+    this._setBattery(this._battery-1);this._totalExp+=this._efficiency;return this._efficiency;
   }
   showStatus(){
     const w=this._waitTurn>0?` ⏳${this._waitTurn}턴 대기`:"";
-    addLog(`[${this.name}] ${this._robotType} | 배터리:${this._battery}/${this._maxBattery} | 탐사:${this._totalExp}%${w}`);
+    addLog(`[${this.name}] ${this._robotType} | 배터리:${this._battery}/${this._maxBattery} | 탐사:${this._totalExp}%${w}`)
   }
 }
-class QuadrupedRobot extends BaseRobot {
-  constructor(name,maxBattery,eff,color){ super(name,maxBattery,eff,"사족보행",color); }
+class QuadrupedRobot extends BaseRobot{
+  constructor(name,maxBattery,eff,color){super(name,maxBattery,eff,"사족보행",color)}
   recharge(weather){
-    if(weather==="낮"){ this._setBattery(this._maxBattery); addLog(`[RECHARGE] ${this.name}: 낮 즉시 완전충전`); }
-    else addLog(`[RECHARGE] ${this.name}: 밤에는 충전 불가`);
+    if(weather==="낮"){this._setBattery(this._maxBattery);addLog(`[RECHARGE] ${this.name}: 낮 즉시 완전충전`)}
+    else addLog(`[RECHARGE] ${this.name}: 밤에는 충전 불가`)
   }
   explore(world,turn){
-    world.updateWeather(turn);
     if(this._battery<=0) return 0;
-    this._setBattery(this._battery-1); this._totalExp+=this._efficiency;
-    return this._efficiency;
+    this._setBattery(this._battery-1);this._totalExp+=this._efficiency;return this._efficiency;
   }
-  showStatus(){
-    addLog(`[${this.name}] ${this._robotType} | 배터리:${this._battery}/${this._maxBattery} | 탐사:${this._totalExp}%`);
-  }
+  showStatus(){addLog(`[${this.name}] ${this._robotType} | 배터리:${this._battery}/${this._maxBattery} | 탐사:${this._totalExp}%`)}
 }
-class World {
-  constructor(cycle){
-    this.weather="낮"; this.totalRunCount=0;
-    this._lastUpdateTurn=-1; this.cycle=cycle||2;
-  }
+class World{
+  constructor(cycle){this.weather="낮";this.totalRunCount=0;this._lastUpdateTurn=-1;this.cycle=cycle||2}
   updateWeather(turn){
     if(this._lastUpdateTurn===turn) return;
-    this.totalRunCount++; this._lastUpdateTurn=turn;
+    this._lastUpdateTurn=turn;
+    // totalRunCount 증가는 여기서 하지 않음 — advanceTurn()에서만 증가
+  }
+  advanceTurn(turn){
+    // 턴이 끝날 때 한 번만 호출: 날씨 카운터 증가 및 전환 처리
+    this.totalRunCount++;
     if(this.totalRunCount%this.cycle===0){
       this.weather=this.weather==="낮"?"밤":"낮";
-      addLog(`>>> 날씨 변경: ${this.weather} <<<`);
-      applyWeatherBg();
+      addLog(`>>> 날씨 변경: ${this.weather} <<<`);applyWeatherBg();
     }
   }
 }
@@ -413,65 +408,40 @@ let robots=[
   new QuadrupedRobot("Walker-03",4,3,"#ff8c42")
 ];
 let weatherCycle=2;
+let umlWeatherCycle=2;
 
-// Main / UML 탐사 상태 완전 분리
-let mainState={ env:new World(2), progress:0, turn:1, active:0, timer:null, speed:1000, speedIndex:0 };
-let umlState={ env:new World(2), progress:0, turn:1 };
+let mainState={
+  env:new World(2),progress:0,turn:1,active:0,
+  timer:null,speed:1000,speedIndex:0,
+  cellColors:new Array(100).fill(null),
+  betweenTurns:false
+};
+let umlState={
+  env:new World(2),progress:0,turn:0,
+  cellColors:new Array(100).fill(null)
+};
 
+// UML 전용 로봇 2기 — 메인 robots와 완전 분리
+let umlRobots=[
+  new QuadrupedRobot("Quadruped",5,5,"#43ff7d"),
+  new WheeledRobot("Wheeled",5,3,"#4aa3ff")
+];
+
+let mainLog="";  // 메인 탭 로그
+let umlLog="";   // UML 탭 로그
 let mode="main";
-let edit=false, cycleEditing=false;
+let edit=false,umlEdit=false,cycleEditing=false;
 let pendingDeleteIdx=null;
-
-// UML 체크 상태: Map<key, bool>
-// key 형식: "adt-recharge", "adt-explore", "adt-status",
-//           "q-recharge", "q-explore", "q-status", "w-recharge", "w-explore", "w-status"
 let umlChecks={};
+let umlLockChecks=false;
 
 /* ── 보드 초기화 ── */
 const boardEl=document.getElementById("board");
-for(let i=0;i<100;i++){
-  const c=document.createElement("div"); c.className="cell"; boardEl.appendChild(c);
-}
+for(let i=0;i<100;i++){const c=document.createElement("div");c.className="cell";boardEl.appendChild(c)}
 
 /* ═══════════════════════════════════════════
-   공통 paint: Main과 UML이 같은 board를 공유하지만 다른 state로 paint
+   Paint
 ═══════════════════════════════════════════ */
-function paintCell(color, progressRef){
-  // progressRef는 {v} 형태의 객체
-  if(progressRef.v>=100) return;
-  document.querySelectorAll('.cell')[progressRef.v].style.background=color;
-  progressRef.v++;
-}
-
-function paintMain(color){
-  if(mainState.progress>=100) return;
-  document.querySelectorAll('.cell')[mainState.progress].style.background=color;
-  mainState.progress++;
-}
-function paintUML(color){
-  if(umlState.progress>=100) return;
-  document.querySelectorAll('.cell')[umlState.progress].style.background=color;
-  umlState.progress++;
-}
-
-/* ── 현재 탭의 progress/turn 가져오기 ── */
-function curProgress(){ return mode==="main"?mainState.progress:umlState.progress; }
-function curTurn(){ return mode==="main"?mainState.turn:umlState.turn; }
-function curEnv(){ return mode==="main"?mainState.env:umlState.env; }
-
-/* ── 탭 전환 시 보드를 해당 상태로 다시 그리기 ── */
-function redrawBoard(){
-  // 전부 지우고 해당 state progress까지 다시
-  // 저장된 cell 히스토리가 없으므로 그냥 비우고 umlState/mainState의 cellColors를 씀
-  // → cellColors 배열을 각 state에 추가
-}
-
-/* ═══════════════════════════════════════════
-   각 state에 cellColors 배열 추가 (탭 전환용)
-═══════════════════════════════════════════ */
-mainState.cellColors=new Array(100).fill(null);
-umlState.cellColors=new Array(100).fill(null);
-
 function paintMainC(color){
   if(mainState.progress>=100) return;
   mainState.cellColors[mainState.progress]=color;
@@ -484,60 +454,94 @@ function paintUMLC(color){
   document.querySelectorAll('.cell')[umlState.progress].style.background=color;
   umlState.progress++;
 }
-
 function redrawBoardForMode(){
   const st=mode==="main"?mainState:umlState;
-  const cells=document.querySelectorAll('.cell');
-  cells.forEach((c,i)=>{
-    c.style.background=st.cellColors[i]||'#1b1b1b';
-  });
+  document.querySelectorAll('.cell').forEach((c,i)=>{c.style.background=st.cellColors[i]||'#1b1b1b'});
 }
+function curProgress(){return mode==="main"?mainState.progress:umlState.progress}
+function curTurn(){return mode==="main"?mainState.turn:umlState.turn}
+function curEnv(){return mode==="main"?mainState.env:umlState.env}
 
 /* ═══════════════════════════════════════════
    날씨 / 배경
 ═══════════════════════════════════════════ */
-function applyWeatherBg(){
-  document.body.classList.toggle("day-bg", curEnv().weather==="낮");
-}
+function applyWeatherBg(){document.body.classList.toggle("day-bg",curEnv().weather==="낮")}
 function toggleWeather(){
   curEnv().weather=curEnv().weather==="낮"?"밤":"낮";
-  addLog(`>>> 날씨 수동 변경: ${curEnv().weather} <<<`);
-  applyWeatherBg();
+  addLog(`>>> 날씨 수동 변경: ${curEnv().weather} <<<`);applyWeatherBg();
+}
+
+/* ═══════════════════════════════════════════
+   패널 높이 동기화
+═══════════════════════════════════════════ */
+function syncPanelHeights(){
+  const lp=document.getElementById("leftPanel"),rp=document.getElementById("rightPanel");
+  lp.style.minHeight="";rp.style.minHeight="";
+  const maxH=Math.max(lp.offsetHeight,rp.offsetHeight);
+  lp.style.minHeight=maxH+"px";rp.style.minHeight=maxH+"px";
 }
 
 /* ═══════════════════════════════════════════
    로그
 ═══════════════════════════════════════════ */
 function addLog(t){
+  const entry='<span class="log-ts">['+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+']</span> '+t;
+  if(mode==="uml"){
+    umlLog='> '+entry+'<br>'+umlLog;
+  } else {
+    mainLog='> '+entry+'<br>'+mainLog;
+  }
   const el=document.getElementById("log");
-  el.innerHTML='> '+t+'<br>'+el.innerHTML;
+  if(el) el.innerHTML=mode==="uml"?umlLog:mainLog;
+}
+function syncLogDisplay(){
+  const el=document.getElementById("log");
+  if(el) el.innerHTML=mode==="uml"?umlLog:mainLog;
+}
+function clearCurrentLog(){
+  if(mode==="uml") umlLog=""; else mainLog="";
+  syncLogDisplay();
+  const ov=document.getElementById("logOverlayContent");
+  if(ov) ov.innerHTML="";
 }
 function openLogOverlay(){
-  document.getElementById("logOverlayContent").innerHTML=document.getElementById("log").innerHTML;
+  document.getElementById("logOverlayContent").innerHTML=mode==="uml"?umlLog:mainLog;
+  document.getElementById("logOverlayTitle").textContent=(mode==="uml"?"UML":"MAIN")+" 로그";
   document.getElementById("logOverlay").classList.add("open");
 }
-function closeLogOverlay(){ document.getElementById("logOverlay").classList.remove("open"); }
+function closeLogOverlay(){document.getElementById("logOverlay").classList.remove("open")}
 
 /* ═══════════════════════════════════════════
-   weatherCycle 편집
+   weatherCycle
 ═══════════════════════════════════════════ */
 function startCycleEdit(){
-  cycleEditing=true; renderPlayer();
-  setTimeout(()=>{ const i=document.getElementById("cycleInput"); if(i){i.focus();i.select();} },0);
+  cycleEditing=true;renderPlayer();
+  setTimeout(()=>{const i=document.getElementById("cycleInput");if(i){i.focus();i.select()}},0);
 }
 function commitCycleEdit(){
   const i=document.getElementById("cycleInput");
-  if(i){ const v=parseInt(i.value); if(!isNaN(v)&&v>=1) weatherCycle=v; }
-  cycleEditing=false;
-  mainState.env.cycle=weatherCycle;
-  umlState.env.cycle=weatherCycle;
-  renderPlayer();
+  if(i){const v=parseInt(i.value);if(!isNaN(v)&&v>=1){
+    if(mode==="uml"){umlWeatherCycle=v;umlState.env.cycle=v;}
+    else{weatherCycle=v;mainState.env.cycle=v;}
+  }}
+  cycleEditing=false;renderPlayer();
 }
 function adjustCycle(d){
-  weatherCycle=Math.max(1,weatherCycle+d);
-  mainState.env.cycle=weatherCycle;
-  umlState.env.cycle=weatherCycle;
+  if(mode==="uml"){umlWeatherCycle=Math.max(1,umlWeatherCycle+d);umlState.env.cycle=umlWeatherCycle;}
+  else{weatherCycle=Math.max(1,weatherCycle+d);mainState.env.cycle=weatherCycle;}
   renderPlayer();
+}
+function getCycle(){return mode==="uml"?umlWeatherCycle:weatherCycle;}
+
+/* ═══════════════════════════════════════════
+   Turn 텍스트 flash
+═══════════════════════════════════════════ */
+function flashTurnText(){
+  const el=document.getElementById("turnText");
+  if(!el) return;
+  el.classList.remove("turn-flash");
+  void el.offsetWidth;
+  el.classList.add("turn-flash");
 }
 
 /* ═══════════════════════════════════════════
@@ -546,30 +550,51 @@ function adjustCycle(d){
 function renderPlayer(){
   const env=curEnv();
   const wIcon=env.weather==="낮"?"☀️":"🌙";
-  const prog=curProgress(), trn=curTurn();
+  const prog=curProgress(),trn=curTurn();
   const done=prog>=100;
+  const noRobots=robots.length===0;
+  // betweenTurns 중에는 항상 "재생 중"으로 표시
+  const st=mainState;
+  const playing=(st.timer&&st.timer!=="paused")||st.betweenTurns;
   let html;
 
-  if(mode==="uml"){
+  if(mode==="uml"&&umlEdit){
+    // UML 수정 모드
+    const cyc=cycleEditing
+      ?`<input id="cycleInput" class="cycle-input" value="${getCycle()}" onblur="commitCycleEdit()" onkeydown="if(event.key==='Enter')commitCycleEdit()">`
+      :`<span class="cycle-display" onclick="startCycleEdit()" title="클릭해 직접 입력">${getCycle()}</span>`;
     html=`
-<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-  <div style="font-size:20px">${wIcon}</div>
-  <div style="font-size:13px;color:#aaa">${env.weather==="낮"?"Day":"Night"} / Turn ${trn} / ${prog}%</div>
+<div id="playerBar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+  <div style="font-size:20px;cursor:pointer;box-shadow:0 0 10px yellow;padding:2px" onclick="toggleWeather();renderPlayer()">${wIcon}</div>
+  <div style="font-size:13px;color:#aaa">날씨 길이: ${getCycle()}회마다 전환</div>
   <div style="margin-left:auto;display:flex;gap:5px;align-items:center">
-    <button class="btn btn-sq" title="선택된 메서드 실행" onclick="umlRunChecked()">✓</button>
-    <button class="btn btn-sq" title="모든 체크 해제" onclick="umlClearChecks()">✕</button>
+    <button class="btn btn-sq" onclick="adjustCycle(-1)">−</button>
+    ${cyc}
+    <button class="btn btn-sq" onclick="adjustCycle(1)">+</button>
+    <button class="btn btn-sq" onclick="toggleEdit()" title="수정 완료">⚙</button>
+  </div>
+</div>`;
+  } else if(mode==="uml"){
+    const lockClass=umlLockChecks?"btn-lock-on":"";
+    html=`
+<div id="playerBar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+  <div style="font-size:20px">${wIcon}</div>
+  <div style="font-size:13px;color:#aaa">${env.weather==="낮"?"Day":"Night"} / <span id="turnText">Turn ${trn}</span> / ${prog}%</div>
+  <div style="margin-left:auto;display:flex;gap:5px;align-items:center">
+    <button class="btn btn-sq" title="선택된 메서드 실행" onclick="umlRunChecked()">▶</button>
+    <button class="btn btn-sq ${lockClass}" title="체크 고정" onclick="toggleLockChecks()">✓</button>
     <button class="btn btn-sq ${done?'btn-highlight':''}" title="초기화" onclick="resetSim()">■</button>
-    <button class="btn btn-sq" title="턴 넘기기" onclick="umlNextTurn()">⏭</button>
+    <button class="btn btn-sq" title="수정" onclick="toggleEdit()">⚙</button>
   </div>
 </div>`;
   } else if(edit){
     const cyc=cycleEditing
-      ?`<input id="cycleInput" class="cycle-input" value="${weatherCycle}" onblur="commitCycleEdit()" onkeydown="if(event.key==='Enter')commitCycleEdit()">`
-      :`<span class="cycle-display" onclick="startCycleEdit()" title="클릭해 직접 입력">${weatherCycle}</span>`;
+      ?`<input id="cycleInput" class="cycle-input" value="${getCycle()}" onblur="commitCycleEdit()" onkeydown="if(event.key==='Enter')commitCycleEdit()">`
+      :`<span class="cycle-display" onclick="startCycleEdit()" title="클릭해 직접 입력">${getCycle()}</span>`;
     html=`
-<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+<div id="playerBar" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
   <div style="font-size:20px;cursor:pointer;box-shadow:0 0 10px yellow;padding:2px" onclick="toggleWeather();renderPlayer()">${wIcon}</div>
-  <div style="font-size:13px;color:#aaa">날씨 길이: ${weatherCycle}회마다 전환</div>
+  <div style="font-size:13px;color:#aaa">날씨 길이: ${getCycle()}회마다 전환</div>
   <div style="margin-left:auto;display:flex;gap:5px;align-items:center">
     <button class="btn btn-sq" onclick="adjustCycle(-1)">−</button>
     ${cyc}
@@ -578,12 +603,10 @@ function renderPlayer(){
   </div>
 </div>`;
   } else {
-    const st=mainState;
-    const playing=st.timer&&st.timer!=="paused";
     html=`
-<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+<div id="playerBar" class="${noRobots?'player-disabled':''}" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
   <div style="font-size:20px">${wIcon}</div>
-  <div style="font-size:13px"><b>${env.weather==="낮"?"Day":"Night"}</b> / Turn ${trn} / ${prog}%</div>
+  <div style="font-size:13px"><b>${env.weather==="낮"?"Day":"Night"}</b> / <span id="turnText">Turn ${trn}</span> / ${prog}%</div>
   <div style="margin-left:auto;display:flex;gap:5px;align-items:center">
     <button class="btn btn-sq" onclick="playPause()" ${done?'disabled':''}>${playing?'⏸':'▶'}</button>
     <button class="btn btn-sq" onclick="changeSpeed()">x${[1,2,4][st.speedIndex]}</button>
@@ -612,32 +635,37 @@ function robotCard(r,i){
   const wb=r.waitTurn>0?`<span class="badge badge-wait">⏳${r.waitTurn}턴</span>`:"";
   const db=r.battery<=0?`<span class="badge badge-dead">배터리없음</span>`:"";
   return `
-<div id="rcard-${i}" class="robot-card ${i===mainState.active?'active-robot':''} ${r.waitTurn>0?'waiting-robot':''}" style="color:${r.color}">
+<div id="rcard-${i}" class="robot-card ${i===mainState.active&&!mainState.betweenTurns?'active-robot':''} ${r.waitTurn>0?'waiting-robot':''}" style="color:${r.color}">
+  <div class="card-actions">
+    <button class="card-btn card-btn-del" onclick="askDelete(${i})" title="삭제">✕</button>
+  </div>
   <div>
-    <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</div>
-    <div style="font-size:11px;color:#888">${r.robotType}</div>
-    <div style="margin:3px 0">${wb}${db}</div>
+    <div class="card-name">${r.name}</div>
+    <div class="card-type">${r.robotType}</div>
+    <div style="margin:2px 0">${wb}${db}</div>
     <div class="battery-bar"><div class="battery-fill" style="width:${bp}%;background:${bc}"></div></div>
-    <div style="font-size:11px;color:#aaa">BAT ${r.battery}/${r.maxBattery} | EFF ${r.efficiency}</div>
-    <div style="font-size:11px;color:#aaa">탐사 ${r.totalExp}%</div>
+    <div class="card-info">BAT ${r.battery}/${r.maxBattery} | EFF ${r.efficiency}</div>
+    <div class="card-info">탐사 ${r.totalExp}%</div>
   </div>
-  <div style="display:flex;gap:5px">
-    <button class="btn" style="font-size:12px;padding:4px 8px;flex:1" onclick="changeColor(${i})">🎨</button>
-    <button class="btn btn-danger" style="font-size:12px;padding:4px 8px;flex:1" onclick="askDelete(${i})">🗑</button>
-  </div>
+  <div></div>
+  <button class="card-color-btn" onclick="changeColor(${i})" title="색상 변경">🎨</button>
 </div>`;
 }
+
 function renderMain(){
+  const emptyMsg=robots.length===0
+    ?`<div style="color:#555;font-size:13px;text-align:center;padding:40px 0">로봇이 없습니다.<br>+ 추가로 로봇을 등록하세요.</div>`:"";
   document.getElementById("left").innerHTML=`
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
   <b style="font-size:15px">ROBOTS</b>
   <button class="btn" style="font-size:13px;padding:5px 12px" onclick="openAdd()">+ 추가</button>
 </div>
-<div class="inventory">${robots.map((r,i)=>robotCard(r,i)).join('')}</div>`;
+<div class="inventory">${robots.map((r,i)=>robotCard(r,i)).join('')}${emptyMsg}</div>`;
+  requestAnimationFrame(syncPanelHeights);
 }
 
-function randomColor(){ return `hsl(${Math.floor(Math.random()*360)},75%,62%)`; }
-function changeColor(i){ robots[i].color=randomColor(); renderMain(); }
+function randomColor(){return `hsl(${Math.floor(Math.random()*360)},75%,62%)`}
+function changeColor(i){robots[i].color=randomColor();renderMain()}
 
 /* ═══════════════════════════════════════════
    로봇 추가
@@ -646,15 +674,15 @@ function openAdd(){
   const rp=document.getElementById("rightPanel");
   const rect=rp.getBoundingClientRect();
   const ov=document.getElementById("addOverlay");
-  ov.style.top=rect.top+"px"; ov.style.left=rect.left+"px";
-  ov.style.width=rect.width+"px"; ov.style.height=rect.height+"px";
+  ov.style.top=rect.top+"px";ov.style.left=rect.left+"px";
+  ov.style.width=rect.width+"px";ov.style.height=rect.height+"px";
   ov.classList.add("open");
   document.getElementById("addName").focus();
 }
-function closeAdd(){ document.getElementById("addOverlay").classList.remove("open"); }
+function closeAdd(){document.getElementById("addOverlay").classList.remove("open")}
 function confirmAdd(){
   const n=document.getElementById("addName").value.trim();
-  if(!n){alert("이름을 입력하세요");return;}
+  if(!n){alert("이름을 입력하세요");return}
   const t=document.getElementById("addType").value;
   const b=parseInt(document.getElementById("addBat").value)||5;
   const e=parseInt(document.getElementById("addEff").value)||3;
@@ -662,7 +690,9 @@ function confirmAdd(){
   if(t==="w") robots.push(new WheeledRobot(n,b,e,c));
   else        robots.push(new QuadrupedRobot(n,b,e,c));
   addLog(`[ADD] ${n} 추가됨`);
-  closeAdd(); renderMain();
+  // 입력 초기화
+  document.getElementById("addName").value="";
+  closeAdd();renderLeft();renderPlayer();
 }
 
 /* ═══════════════════════════════════════════
@@ -678,95 +708,78 @@ function askDelete(i){
   document.getElementById("delMsg").textContent=`"${robots[i].name}" 삭제할까요?`;
   ov.classList.add("open");
 }
-function closeDelete(){ pendingDeleteIdx=null; document.getElementById("delOverlay").classList.remove("open"); }
+function closeDelete(){pendingDeleteIdx=null;document.getElementById("delOverlay").classList.remove("open")}
 function confirmDelete(){
   if(pendingDeleteIdx===null) return;
   addLog(`[DELETE] ${robots[pendingDeleteIdx].name} 삭제됨`);
   robots.splice(pendingDeleteIdx,1);
   if(mainState.active>=robots.length) mainState.active=0;
-  closeDelete(); renderMain();
+  closeDelete();renderLeft();renderPlayer();
 }
 
 /* ═══════════════════════════════════════════
-   UML 탭 — 체크 상태 관리
-   key: "adt-recharge"|"adt-explore"|"adt-status"
-        "q-recharge"|"q-explore"|"q-status"
-        "w-recharge"|"w-explore"|"w-status"
+   UML 체크 상태
 ═══════════════════════════════════════════ */
-function umlGetCheck(key){ return !!umlChecks[key]; }
+function umlGetCheck(key){return !!umlChecks[key]}
 
-// 체크 변경 — 상호 배타 & 연동 로직
-function umlSetCheck(key, val){
-  const prev=umlChecks[key];
+function umlSetCheck(key,val){
   umlChecks[key]=val;
-
-  // 하위 클래스: recharge↔explore 배타
   if(val){
-    if(key==="q-recharge") { umlChecks["q-explore"]=false; flashUncheck("q-explore"); }
-    if(key==="q-explore")  { umlChecks["q-recharge"]=false; flashUncheck("q-recharge"); }
-    if(key==="w-recharge") { umlChecks["w-explore"]=false; flashUncheck("w-explore"); }
-    if(key==="w-explore")  { umlChecks["w-recharge"]=false; flashUncheck("w-recharge"); }
-
-    // adt-recharge 체크 → 하위 recharge 해제
-    if(key==="adt-recharge"){
-      ["q-recharge","w-recharge"].forEach(k=>{ umlChecks[k]=false; flashUncheck(k); });
+    // 같은 클래스 내: recharge ↔ explore 배타
+    if(key==="adt-recharge"){umlChecks["adt-explore"]=false;flashUncheck("adt-explore");}
+    if(key==="adt-explore") {umlChecks["adt-recharge"]=false;flashUncheck("adt-recharge");}
+    if(key==="q-recharge")  {umlChecks["q-explore"]=false;flashUncheck("q-explore");}
+    if(key==="q-explore")   {umlChecks["q-recharge"]=false;flashUncheck("q-recharge");}
+    if(key==="w-recharge")  {umlChecks["w-explore"]=false;flashUncheck("w-explore");}
+    if(key==="w-explore")   {umlChecks["w-recharge"]=false;flashUncheck("w-recharge");}
+    // ADT recharge/explore → 하위 전체 해제
+    if(key==="adt-recharge"){["q-recharge","w-recharge"].forEach(k=>{umlChecks[k]=false;flashUncheck(k);});}
+    if(key==="adt-explore") {["q-explore","w-explore"].forEach(k=>{umlChecks[k]=false;flashUncheck(k);});}
+    if(key==="adt-status")  {["q-status","w-status"].forEach(k=>{umlChecks[k]=false;flashUncheck(k);});}
+    // 하위 recharge/explore → ADT recharge AND explore 모두 해제
+    if(key==="q-recharge"||key==="w-recharge"||key==="q-explore"||key==="w-explore"){
+      umlChecks["adt-recharge"]=false;flashUncheck("adt-recharge");
+      umlChecks["adt-explore"]=false;flashUncheck("adt-explore");
     }
-    if(key==="adt-explore"){
-      ["q-explore","w-explore"].forEach(k=>{ umlChecks[k]=false; flashUncheck(k); });
-    }
-    // 하위 recharge 체크 → adt-recharge 해제
-    if(key==="q-recharge"||key==="w-recharge"){
-      umlChecks["adt-recharge"]=false; flashUncheck("adt-recharge");
-    }
-    if(key==="q-explore"||key==="w-explore"){
-      umlChecks["adt-explore"]=false; flashUncheck("adt-explore");
-    }
+    if(key==="q-status"||key==="w-status"){umlChecks["adt-status"]=false;flashUncheck("adt-status");}
   }
   renderUML();
 }
 
-// 해제된 체크박스에 붉은 flash
 const flashSet=new Set();
-function flashUncheck(key){
-  flashSet.add(key);
-  setTimeout(()=>{ flashSet.delete(key); /* DOM은 renderUML이 처리 */ },2100);
-}
+function flashUncheck(key){flashSet.add(key);setTimeout(()=>flashSet.delete(key),2100)}
+
+function toggleLockChecks(){umlLockChecks=!umlLockChecks;renderPlayer()}
 
 /* ── UML 렌더 ── */
 function renderUML(){
-  const env=umlState.env;
+  const wWaiting=(umlRobots.find(r=>r instanceof WheeledRobot)||{waitTurn:0}).waitTurn>0;
 
-  // 각 로봇의 대기 여부
-  const qBot=robots.find(r=>r instanceof QuadrupedRobot);
-  const wBot=robots.find(r=>r instanceof WheeledRobot);
-  const wWaiting=wBot&&wBot.waitTurn>0;
-  const qDead=qBot&&qBot.battery<=0;
-  const wDead=wBot&&wBot.battery<=0;
-
-  function cbHTML(key, label, extra=""){
+  function cbHTML(key,label){
     const checked=umlGetCheck(key);
     const isFlash=flashSet.has(key);
-    // dimmed: 충전 대기 중인 로봇의 recharge/explore (status 제외)
     let dimmed=false;
     if(key==="w-recharge"||key==="w-explore") dimmed=wWaiting;
-    const dimClass=dimmed?"dimmed":"";
-    const flashClass=isFlash&&!checked?"unchecked-flash":"";
     return `
-<div class="uml-row ${dimClass}">
-  <input type="checkbox" class="uml-cb ${flashClass}" id="cb-${key}"
-    ${checked?"checked":""}
-    ${dimmed?"":""}
-    onchange="umlSetCheck('${key}',this.checked)">
+<div class="uml-row ${dimmed?"dimmed":""}">
   <label for="cb-${key}" class="uml-row-label" style="cursor:pointer">${label}</label>
-  ${extra}
+  <input type="checkbox" class="uml-cb ${isFlash&&!checked?"unchecked-flash":""}" id="cb-${key}"
+    ${checked?"checked":""} ${dimmed?"disabled":""}
+    onchange="umlSetCheck('${key}',this.checked)">
+</div>`;
+  }
+
+  // show_status: run 버튼으로 (체크박스 아님), 첫 번째 위치
+  function statusRunHTML(key, label, robotCls){
+    return `
+<div class="uml-row">
+  <span class="uml-row-label">${label}</span>
+  <button class="btn" style="font-size:11px;padding:2px 6px" onclick="umlRunStatus('${robotCls}')">run</button>
 </div>`;
   }
 
   document.getElementById("left").innerHTML=`
-<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-  <button class="desc-trigger" onclick="openDesc()" title="클래스 설명">···</button>
-</div>
-<div class="uml-wrap">
+<div class="uml-wrap" style="position:relative">
 <table style="border-collapse:collapse;width:100%;font-family:inherit">
 <tr>
 <td style="width:56%;vertical-align:top;padding-right:14px">
@@ -774,81 +787,86 @@ function renderUML(){
   <!-- RobotADT -->
   <div class="uml-class-box" style="border-color:gold">
     <div class="uml-title" style="color:gold">Class : Robot ADT</div>
-    <div class="uml-fields">Fields:
-  + name : String
-  + battery : int
-  + efficiency : int
-  + robot_type : String</div>
+    <div class="uml-fields">
+      <div class="uml-field-item">Fields:</div>
+      <div class="uml-field-item">+ name : String</div>
+      <div class="uml-field-item">+ battery : int</div>
+      <div class="uml-field-item">+ efficiency : int</div>
+      <div class="uml-field-item">+ robot_type : String</div>
+    </div>
     <div class="uml-behaviors">
-      <div style="font-size:12px;color:#888;margin-bottom:3px">Behaviors:</div>
+      <div style="font-size:12px;color:#888;margin-bottom:2px">Behaviors:</div>
+      ${statusRunHTML("adt-status","+ show_status()","adt")}
       ${cbHTML("adt-recharge","+ recharge(weather)")}
-      ${cbHTML("adt-status","+ show_status()")}
       ${cbHTML("adt-explore","+ explore(world,turn)")}
     </div>
   </div>
 
-  <!-- 상속 화살표 -->
-  <div style="text-align:center;color:#aaa;font-size:20px;line-height:1.2;padding:2px 0">△</div>
+  <!-- 화살표: 세모 위, 선 아래 -->
+  <div class="uml-arrow-single">
+    <div class="arrow-head">△</div>
+    <div class="arrow-line"></div>
+  </div>
 
   <!-- BaseRobot -->
   <div class="uml-class-box" style="border-color:#8a7420">
     <div class="uml-title" style="color:#c8a820">Class : Base Robot</div>
-    <div class="uml-fields">Fields:
-  – __name : String
-  – __max_battery : int
-  – __battery : int
-  – __efficiency : int
-  – __total_exp : int
-  # _wait_turn : int</div>
+    <div class="uml-fields">
+      <div class="uml-field-item">Fields:</div>
+      <div class="uml-field-item">– __name : String</div>
+      <div class="uml-field-item">– __max_battery : int</div>
+      <div class="uml-field-item">– __battery : int</div>
+      <div class="uml-field-item">– __efficiency : int</div>
+      <div class="uml-field-item">– __total_exp : int</div>
+      <div class="uml-field-item"># _wait_turn : int</div>
+    </div>
     <div class="uml-behaviors">
-      <div style="font-size:12px;color:#888;margin-bottom:3px">Behaviors:</div>
+      <div style="font-size:12px;color:#888;margin-bottom:2px">Behaviors:</div>
       <div class="uml-row"><span style="color:#ccc">+ _set_battery(value)</span></div>
     </div>
   </div>
 
-  <!-- 상속 화살표 2개 -->
-  <div style="display:flex;justify-content:space-around;color:#aaa;font-size:20px;padding:2px 0">
-    <span>△</span><span>△</span>
+  <!-- 화살표 2개: 세모 위, 선 아래 -->
+  <div class="uml-arrow-double">
+    <div class="arrow-col"><div class="arrow-head">△</div><div class="arrow-line"></div></div>
+    <div class="arrow-col"><div class="arrow-head">△</div><div class="arrow-line"></div></div>
   </div>
 
   <!-- 하위 클래스 2열 -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-
-    <!-- QuadrupedRobot -->
     <div class="uml-class-box" style="border-color:#43ff7d">
       <div class="uml-title" style="color:#43ff7d;font-size:13px">Class : Quadruped Robot</div>
       <div class="uml-behaviors">
-        <div style="font-size:12px;color:#888;margin-bottom:3px">Behaviors:</div>
+        <div style="font-size:12px;color:#888;margin-bottom:2px">Behaviors:</div>
+        ${statusRunHTML("q-status","+ show_status()","q")}
         ${cbHTML("q-recharge","+ recharge(weather)")}
-        ${cbHTML("q-status","+ show_status()")}
         ${cbHTML("q-explore","+ explore(world,turn)")}
       </div>
     </div>
-
-    <!-- WheeledRobot -->
     <div class="uml-class-box" style="border-color:#4aa3ff">
       <div class="uml-title" style="color:#4aa3ff;font-size:13px">Class : Wheeled Robot</div>
       <div class="uml-behaviors">
-        <div style="font-size:12px;color:#888;margin-bottom:3px">Behaviors:</div>
+        <div style="font-size:12px;color:#888;margin-bottom:2px">Behaviors:</div>
+        ${statusRunHTML("w-status","+ show_status()","w")}
         ${cbHTML("w-recharge","+ recharge()")}
-        ${cbHTML("w-status","+ show_status()")}
         ${cbHTML("w-explore","+ explore(world,turn)")}
       </div>
     </div>
-
   </div>
-</td>
 
-<!-- World (오른쪽) -->
+</td>
+<!-- World -->
 <td style="width:44%;vertical-align:top">
   <div class="uml-class-box" style="border-color:#888">
     <div class="uml-title">Class : World</div>
-    <div class="uml-fields">Fields:
-  + weather : String
-  + total_run_count : int
-  – last_update_turn : int</div>
+    <div class="uml-fields">
+      <div class="uml-field-item">Fields:</div>
+      <div class="uml-field-item">+ weather : String</div>
+      <div class="uml-field-item">+ total_run_count : int</div>
+      <div class="uml-field-item">– last_update_turn : int</div>
+    </div>
     <div class="uml-behaviors">
-      <div style="font-size:12px;color:#888;margin-bottom:3px">Behaviors:</div>
+      <div style="font-size:12px;color:#888;margin-bottom:2px">Behaviors:</div>
       <div class="uml-row">
         <span class="uml-row-label">+ update_weather(turn)</span>
         <button class="btn" style="font-size:11px;padding:2px 6px" onclick="toggleWeather();renderPlayer();addLog('World::update_weather()')">run</button>
@@ -861,47 +879,54 @@ function renderUML(){
 </td>
 </tr>
 </table>
+<!-- 설명 버튼: uml-wrap 우하단 모서리 -->
+<div style="display:flex;justify-content:flex-end;margin-top:16px">
+  <button class="desc-trigger" onclick="openDesc()" title="클래스 설명">···</button>
+</div>
 </div>`;
+  requestAnimationFrame(syncPanelHeights);
 }
 
-/* ── UML 버튼 액션 ── */
+/* ── UML 실행 ── */
 function umlRunChecked(){
-  // 선택된 체크를 순서대로 실행
-  // 순서: adt-recharge → adt-explore → adt-status → q-recharge → q-explore → q-status → w-recharge → ...
-  const order=[
-    "adt-recharge","adt-explore","adt-status",
-    "q-recharge","q-explore","q-status",
-    "w-recharge","w-explore","w-status"
-  ];
+  // charge 또는 explore 체크가 있으면 실행 후 1턴 경과 + 날씨 갱신
+  const order=["adt-status","q-status","w-status",
+                "adt-recharge","q-recharge","w-recharge",
+                "adt-explore","q-explore","w-explore"];
   let ran=false;
+  let turnAdvance=false;
   order.forEach(key=>{
     if(!umlGetCheck(key)) return;
     ran=true;
     const[cls,act]=key.split("-");
-    if(cls==="adt"){
-      // 전체 로봇에 적용
-      robots.forEach(r=>_umlDoAction(r,act));
-    } else if(cls==="q"){
-      const r=robots.find(r=>r instanceof QuadrupedRobot);
-      if(r) _umlDoAction(r,act);
-    } else {
-      const r=robots.find(r=>r instanceof WheeledRobot);
-      if(r) _umlDoAction(r,act);
-    }
+    if(act==="recharge"||act==="explore") turnAdvance=true;
+    if(cls==="adt") umlRobots.forEach(r=>_umlDoAction(r,act));
+    else if(cls==="q"){const r=umlRobots.find(r=>r instanceof QuadrupedRobot);if(r)_umlDoAction(r,act);}
+    else{const r=umlRobots.find(r=>r instanceof WheeledRobot);if(r)_umlDoAction(r,act);}
   });
-  if(!ran) addLog("[UML] 선택된 메서드 없음");
-  renderPlayer();
-  renderUML();
+  if(!ran){
+    // 체크 없이 재생: 턴 넘김 + 메시지 출력
+    addLog(`[UML] 선택된 메서드 없음 — Turn ${umlState.turn} → ${umlState.turn+1} 으로 넘어갑니다`);
+    umlState.env.advanceTurn(umlState.turn);
+    umlState.turn++;
+    flashTurnText();
+    renderPlayer();renderUML();
+    return;
+  }
+  if(turnAdvance){
+    umlState.env.advanceTurn(umlState.turn);
+    umlState.turn++;
+    flashTurnText();
+  }
+  if(!umlLockChecks) Object.keys(umlChecks).forEach(k=>umlChecks[k]=false);
+  renderPlayer();renderUML();
 }
 
-function umlClearChecks(){
-  Object.keys(umlChecks).forEach(k=>umlChecks[k]=false);
-  renderUML();
-}
+function umlClearChecks(){Object.keys(umlChecks).forEach(k=>umlChecks[k]=false);renderUML();}
 
 function umlNextTurn(){
   const env=umlState.env;
-  robots.forEach(r=>{
+  umlRobots.forEach(r=>{
     if(r.battery<=0){
       if(r instanceof WheeledRobot&&r.waitTurn===0) r.recharge();
       if(r instanceof QuadrupedRobot) r.recharge(env.weather);
@@ -911,17 +936,14 @@ function umlNextTurn(){
     r.showStatus();
   });
   umlState.turn++;
-  flashRobots();
-  renderPlayer();
-  renderUML();
+  flashRobots();flashTurnText();
+  renderPlayer();renderUML();
 }
 
 function _umlDoAction(r,act){
   const env=umlState.env;
-  // 대기 중인 WheeledRobot: status 외 실행 안 함 (dimmed 처리)
   if(r instanceof WheeledRobot&&r.waitTurn>0&&act!=="status"){
-    addLog(`[SKIP] ${r.name}: 대기 중이라 ${act} 실행 안 함`);
-    return;
+    addLog(`[SKIP] ${r.name}: 대기 중이라 ${act} 실행 안 함`);return;
   }
   if(act==="explore"){
     const gained=r.explore(env,umlState.turn);
@@ -930,26 +952,31 @@ function _umlDoAction(r,act){
   } else if(act==="recharge"){
     if(r instanceof QuadrupedRobot) r.recharge(env.weather);
     else r.recharge();
-  } else {
-    r.showStatus();
-  }
+  } else r.showStatus();
+}
+
+function umlRunStatus(cls){
+  if(cls==="adt") umlRobots.forEach(r=>r.showStatus());
+  else if(cls==="q"){const r=umlRobots.find(r=>r instanceof QuadrupedRobot);if(r)r.showStatus();}
+  else{const r=umlRobots.find(r=>r instanceof WheeledRobot);if(r)r.showStatus();}
 }
 
 /* ═══════════════════════════════════════════
    설명 팝업
 ═══════════════════════════════════════════ */
-function openDesc(){ document.getElementById("descModal").classList.add("open"); }
-function closeDesc(){ document.getElementById("descModal").classList.remove("open"); }
+function openDesc(){document.getElementById("descModal").classList.add("open")}
+function closeDesc(){document.getElementById("descModal").classList.remove("open")}
 
 /* ═══════════════════════════════════════════
-   Main tick
+   Main tick — betweenTurns 플래그로 딜레이 관리
 ═══════════════════════════════════════════ */
 function tick(){
   const st=mainState;
-  if(st.progress>=100){
-    clearInterval(st.timer); st.timer=null;
-    flashPanels(); renderPlayer(); return;
-  }
+  // betweenTurns 중에는 tick 무시 (타이머가 인터벌 중에도 발화하는 버그 방지)
+  if(st.betweenTurns) return;
+  if(robots.length===0){clearInterval(st.timer);st.timer=null;renderPlayer();return}
+  if(st.progress>=100){clearInterval(st.timer);st.timer=null;flashPanels();renderPlayer();return}
+
   const r=robots[st.active];
   if(r.battery<=0){
     if(r instanceof WheeledRobot&&r.waitTurn===0) r.recharge();
@@ -958,14 +985,27 @@ function tick(){
   const gained=r.explore(st.env,st.turn);
   if(gained>0) for(let j=0;j<gained&&st.progress<100;j++) paintMainC(r.color);
   r.showStatus();
+
   st.active=(st.active+1)%robots.length;
+
   if(st.active===0){
+    // 턴 종료: advanceTurn으로 날씨 변경 처리 (모든 로봇 행동 후 한 번만)
+    st.env.advanceTurn(st.turn);
     st.turn++;
+    st.betweenTurns=true;
     flashRobots();
-    clearInterval(st.timer);
-    setTimeout(()=>{ if(st.timer!==null) st.timer=setInterval(tick,st.speed); },st.speed);
-    st.timer="paused";
+    flashTurnText();
+    flashPanelsTurn();
+    if(mode==="main") renderMain();
+    renderPlayer();
+    setTimeout(()=>{
+      st.betweenTurns=false;
+      if(mode==="main") renderMain();
+      renderPlayer();
+    }, st.speed);
+    return;
   }
+
   if(mode==="main") renderMain();
   renderPlayer();
 }
@@ -975,13 +1015,19 @@ function tick(){
 ═══════════════════════════════════════════ */
 function flashRobots(){
   document.querySelectorAll(".robot-card").forEach(el=>{
-    el.classList.remove("flash-robot"); void el.offsetWidth; el.classList.add("flash-robot");
+    el.classList.remove("flash-robot");void el.offsetWidth;el.classList.add("flash-robot");
   });
 }
 function flashPanels(){
   ["leftPanel","rightPanel"].forEach(id=>{
     const el=document.getElementById(id);
-    el.classList.remove("flash-win"); void el.offsetWidth; el.classList.add("flash-win");
+    el.classList.remove("flash-win","flash-turn");void el.offsetWidth;el.classList.add("flash-win");
+  });
+}
+function flashPanelsTurn(){
+  ["leftPanel","rightPanel"].forEach(id=>{
+    const el=document.getElementById(id);
+    el.classList.remove("flash-turn","flash-win");void el.offsetWidth;el.classList.add("flash-turn");
   });
 }
 
@@ -989,34 +1035,44 @@ function flashPanels(){
    유틸
 ═══════════════════════════════════════════ */
 function playPause(){
+  if(robots.length===0) return;
   const st=mainState;
-  if(st.timer&&st.timer!=="paused"){ clearInterval(st.timer); st.timer=null; }
-  else if(!st.timer) st.timer=setInterval(tick,st.speed);
+  if(st.timer){clearInterval(st.timer);st.timer=null;st.betweenTurns=false;}
+  else st.timer=setInterval(tick,st.speed);
   renderPlayer();
 }
 function changeSpeed(){
   const st=mainState;
   st.speedIndex=(st.speedIndex+1)%3;
   st.speed=[1000,500,250][st.speedIndex];
-  if(st.timer&&st.timer!=="paused"){ clearInterval(st.timer); st.timer=setInterval(tick,st.speed); }
+  if(st.timer){clearInterval(st.timer);st.timer=setInterval(tick,st.speed);}
   renderPlayer();
 }
 function resetSim(){
-  const st=mainState; const us=umlState;
-  if(st.timer&&st.timer!=="paused") clearInterval(st.timer);
-  st.timer=null; st.progress=0; st.turn=1; st.active=0;
-  st.env=new World(weatherCycle); st.cellColors=new Array(100).fill(null);
-  us.progress=0; us.turn=1;
-  us.env=new World(weatherCycle); us.cellColors=new Array(100).fill(null);
-  robots.forEach(r=>{ r._battery=r._maxBattery; r._totalExp=0; r._waitTurn=0; });
+  if(mode==="main"){
+    const st=mainState;
+    if(st.timer) clearInterval(st.timer);
+    st.timer=null;st.progress=0;st.turn=1;st.active=0;st.betweenTurns=false;
+    st.env=new World(weatherCycle);st.cellColors=new Array(100).fill(null);
+    robots.forEach(r=>{r._battery=r._maxBattery;r._totalExp=0;r._waitTurn=0;});
+    mainLog="";
+  } else {
+    const us=umlState;
+    us.progress=0;us.turn=0;us.env=new World(umlWeatherCycle);us.cellColors=new Array(100).fill(null);
+    umlRobots.forEach(r=>{r._battery=r._maxBattery;r._totalExp=0;r._waitTurn=0;});
+    Object.keys(umlChecks).forEach(k=>umlChecks[k]=false);
+    umlLog="";
+  }
   document.querySelectorAll('.cell').forEach(c=>c.style.background='#1b1b1b');
-  applyWeatherBg();
-  renderPlayer(); renderLeft();
+  applyWeatherBg();renderPlayer();renderLeft();syncLogDisplay();
 }
 function toggleEdit(){
+  if(mode==="uml"){
+    umlEdit=!umlEdit;cycleEditing=false;renderPlayer();return;
+  }
   const st=mainState;
-  if(st.timer&&st.timer!=="paused") return;
-  edit=!edit; cycleEditing=false; renderPlayer();
+  if(st.timer) return;
+  edit=!edit;cycleEditing=false;renderPlayer();
 }
 
 /* ═══════════════════════════════════════════
@@ -1027,18 +1083,14 @@ function show(m){
   document.getElementById("tab-main").classList.toggle("active-tab",m==="main");
   document.getElementById("tab-uml").classList.toggle("active-tab",m==="uml");
   if(m==="uml") edit=false;
-  redrawBoardForMode();
-  applyWeatherBg();
-  renderPlayer();
-  renderLeft();
+  redrawBoardForMode();applyWeatherBg();renderPlayer();renderLeft();
+  syncLogDisplay();
 }
 
 /* ═══════════════════════════════════════════
    초기 렌더
 ═══════════════════════════════════════════ */
-renderPlayer();
-renderMain();
-applyWeatherBg();
+renderPlayer();renderMain();applyWeatherBg();
 </script>
 </body>
 </html>
